@@ -63,10 +63,6 @@ class HistoryPanel: SiteTableViewController, HomePanel {
         fatalError("init(coder:) has not been implemented")
     }
 
-    deinit {
-        events.forEach { NotificationCenter.default.removeObserver(self, name: $0, object: nil) }
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.addGestureRecognizer(longPressRecognizer)
@@ -126,6 +122,8 @@ class HistoryPanel: SiteTableViewController, HomePanel {
     }
 
     func notificationReceived(_ notification: Notification) {
+        reloadData()
+
         switch notification.name {
         case NotificationFirefoxAccountChanged, NotificationPrivateDataClearedHistory:
             if self.profile.hasSyncableAccount() {
@@ -174,11 +172,11 @@ class HistoryPanel: SiteTableViewController, HomePanel {
         let refresh = UIRefreshControl()
         refresh.addTarget(self, action: #selector(HistoryPanel.refresh), for: UIControlEvents.valueChanged)
         self.refreshControl = refresh
-        self.tableView.addSubview(refresh)
+        self.tableView.refreshControl = refresh
     }
 
     func removeRefreshControl() {
-        self.refreshControl?.removeFromSuperview()
+        self.tableView.refreshControl = nil
         self.refreshControl = nil
     }
 

@@ -147,7 +147,20 @@ public struct AppConstants {
     ///  Toggle the feature that shows the blue 'Open copied link' banner
     public static let MOZ_CLIPBOARD_BAR: Bool = {
         #if MOZ_CHANNEL_RELEASE
-            return false
+            return true
+        #elseif MOZ_CHANNEL_BETA
+            return true
+        #elseif MOZ_CHANNEL_FENNEC
+            return true
+        #else
+            return true
+        #endif
+    }()
+
+    ///  Toggle pocket stories feature
+    public static let MOZ_POCKET_STORIES: Bool = {
+        #if MOZ_CHANNEL_RELEASE
+            return true
         #elseif MOZ_CHANNEL_BETA
             return true
         #elseif MOZ_CHANNEL_FENNEC
@@ -162,9 +175,9 @@ public struct AppConstants {
         #if MOZ_CHANNEL_RELEASE
             return false
         #elseif MOZ_CHANNEL_BETA
-            return false
+            return true
         #elseif MOZ_CHANNEL_FENNEC
-            return false
+            return true
         #else
             return false
         #endif
@@ -204,4 +217,17 @@ public struct AppConstants {
 
     /// The maximum length of a bookmark description stored by Firefox. Shared with Places on desktop.
     public static let DB_DESCRIPTION_LENGTH_MAX = 1024
+    
+    ///  Toggle FxA Leanplum A/B test for prompting push permissions
+    public static let MOZ_FXA_LEANPLUM_AB_PUSH_TEST: Bool = {
+        #if MOZ_CHANNEL_RELEASE
+            return false
+        #elseif MOZ_CHANNEL_BETA
+            return false
+        #elseif MOZ_CHANNEL_FENNEC
+            return false
+        #else
+            return false
+        #endif
+    }()
 }

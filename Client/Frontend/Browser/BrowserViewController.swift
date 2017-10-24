@@ -312,13 +312,6 @@ class BrowserViewController: UIViewController {
         scrollController.showToolbars(animated: false)
     }
 
-    deinit {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BookmarkStatusChangedNotification), object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(self, selector: #selector(BrowserViewController.SELBookmarkStatusDidChange(_:)), name: NSNotification.Name(rawValue: BookmarkStatusChangedNotification), object: nil)
@@ -506,7 +499,6 @@ class BrowserViewController: UIViewController {
         }
 
         if !displayedRestoreTabsAlert && !cleanlyBackgrounded() && crashedLastLaunch() {
-            SentryIntegration.shared.send(message: "Asking to restore tabs", tag: "BrowserViewController", severity: .info, completion: nil)
             displayedRestoreTabsAlert = true
             showRestoreTabsAlert()
         } else {
@@ -518,7 +510,7 @@ class BrowserViewController: UIViewController {
     }
 
     fileprivate func crashedLastLaunch() -> Bool {
-        return SentryIntegration.crashedLastLaunch
+        return Sentry.crashedLastLaunch
     }
 
     fileprivate func cleanlyBackgrounded() -> Bool {
@@ -1599,12 +1591,6 @@ extension BrowserViewController: TabToolbarDelegate, PhotonActionSheetProtocol {
     }
 }
 
-extension BrowserViewController: WindowCloseHelperDelegate {
-    func windowCloseHelper(_ helper: WindowCloseHelper, didRequestToCloseTab tab: Tab) {
-        tabManager.removeTab(tab)
-    }
-}
-
 extension BrowserViewController: TabDelegate {
 
     func tab(_ tab: Tab, didCreateWebView webView: WKWebView) {
@@ -1641,10 +1627,6 @@ extension BrowserViewController: TabDelegate {
 
         let errorHelper = ErrorPageHelper()
         tab.addHelper(errorHelper, name: ErrorPageHelper.name())
-
-        let windowCloseHelper = WindowCloseHelper(tab: tab)
-        windowCloseHelper.delegate = self
-        tab.addHelper(windowCloseHelper, name: WindowCloseHelper.name())
 
         let sessionRestoreHelper = SessionRestoreHelper(tab: tab)
         sessionRestoreHelper.delegate = self
@@ -2503,6 +2485,7 @@ extension BrowserViewController: IntroViewControllerDelegate {
 
         let settingsNavigationController = SettingsNavigationController(rootViewController: vcToPresent)
 		settingsNavigationController.modalPresentationStyle = .formSheet
+        settingsNavigationController.navigationBar.isTranslucent = false
         self.present(settingsNavigationController, animated: true, completion: nil)
     }
 
@@ -2542,7 +2525,6 @@ extension BrowserViewController: ContextMenuHelperDelegate {
             let isPrivate = currentTab.isPrivate
 
             let addTab = { (rURL: URL, isPrivate: Bool) in
-                self.scrollController.showToolbars(animated: !self.scrollController.toolbarsShowing, completion: { _ in
                     let tab = self.tabManager.addTab(URLRequest(url: rURL as URL), afterTab: currentTab, isPrivate: isPrivate)
                     LeanplumIntegration.sharedInstance.track(eventName: .openedNewTab, withParameters: ["Source": "Long Press Context Menu" as AnyObject])
                     guard !self.topTabsVisible else {
@@ -2555,7 +2537,6 @@ extension BrowserViewController: ContextMenuHelperDelegate {
                         }
                     })
                     self.show(buttonToast: toast)
-                })
             }
 
             if !isPrivate {
@@ -2574,8 +2555,7 @@ extension BrowserViewController: ContextMenuHelperDelegate {
 
             let copyTitle = NSLocalizedString("Copy Link", comment: "Context menu item for copying a link URL to the clipboard")
             let copyAction = UIAlertAction(title: copyTitle, style: UIAlertActionStyle.default) { (action: UIAlertAction) -> Void in
-                let pasteBoard = UIPasteboard.general
-                pasteBoard.url = url as URL
+                UIPasteboard.general.url = url as URL
             }
             actionSheetController.addAction(copyAction)
 
@@ -2970,7 +2950,7 @@ extension BrowserViewController: ClientPickerViewControllerDelegate, Instruction
     func clientPickerViewController(_ clientPickerViewController: ClientPickerViewController, didPickClients clients: [RemoteClient]) {
         guard let tab = tabManager.selectedTab,
             let url = tab.canonicalURL?.displayURL?.absoluteString else { return }
-        let shareItem = ShareItem.init(url: url, title: tab.title, favicon: tab.displayFavicon)
+        let shareItem = ShareItem(url: url, title: tab.title, favicon: tab.displayFavicon)
         guard shareItem.isShareable else {
             let alert = UIAlertController(title: Strings.SendToErrorTitle, message: Strings.SendToErrorMessage, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: Strings.SendToErrorOKButton, style: .default) { _ in self.popToBVC()})

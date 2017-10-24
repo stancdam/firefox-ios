@@ -99,10 +99,6 @@ class ActivityStreamPanel: UICollectionViewController, HomePanel {
         
     }
 
-    deinit {
-        NotificationCenter.default.removeObserver(self, name: NotificationDynamicFontChanged, object: nil)
-    }
-
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -543,7 +539,7 @@ extension ActivityStreamPanel: DataObserverDelegate {
     }
 
     func getPocketSites() -> Success {
-        let showPocket = profile.prefs.boolForKey(PrefsKeys.ASPocketStoriesVisible) ?? Pocket.IslocaleSupported(Locale.current.identifier)
+        let showPocket = (profile.prefs.boolForKey(PrefsKeys.ASPocketStoriesVisible) ?? Pocket.IslocaleSupported(Locale.current.identifier)) && AppConstants.MOZ_POCKET_STORIES
         guard showPocket else {
             self.pocketStories = []
             return succeed()
@@ -611,11 +607,11 @@ extension ActivityStreamPanel: DataObserverDelegate {
     }
 
     // Invoked by the ActivityStreamDataObserver when highlights/top sites invalidation is complete.
-    func didInvalidateDataSources(forceHighlights highlights: Bool, forceTopSites topSites: Bool) {
+    func didInvalidateDataSources(refresh forced: Bool, highlightsRefreshed: Bool, topSitesRefreshed: Bool) {
         // Do not reload panel unless we're currently showing the highlight intro or if we
         // force-reloaded the highlights or top sites. This should prevent reloading the
         // panel after we've invalidated in the background on the first load.
-        if showHighlightIntro || highlights || topSites {
+        if showHighlightIntro || forced {
             reloadAll()
         }
     }

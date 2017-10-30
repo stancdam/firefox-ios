@@ -174,6 +174,7 @@ class NavigationTest: BaseTestCase {
         let goToDesktopFromMobile = app.webViews.links.staticTexts["View classic desktop site"]
         // Open URL by default in mobile view
         navigator.openURL(urlString: urlAddOns)
+        waitUntilPageLoad()
         waitForValueContains(app.textFields["url"], value: urlAddOns)
         waitforExistence(goToDesktopFromMobile)
 
@@ -189,6 +190,7 @@ class NavigationTest: BaseTestCase {
     func testToggleBetweenMobileAndDesktopSiteFromMenu() {
         clearData()
         navigator.openURL(urlString: urlAddOns)
+        waitUntilPageLoad()
         waitForValueContains(app.textFields["url"], value: urlAddOns)
         
         // Mobile view by default, desktop view should be available

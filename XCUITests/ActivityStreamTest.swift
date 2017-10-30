@@ -301,6 +301,7 @@ class ActivityStreamTest: BaseTestCase {
 
          // Go to a website
          navigator.openURL(urlString: newTopSite["url"]!)
+         waitUntilPageLoad()
 
          // Go back to Top Sites from context menu
          navigator.browserPerformAction(.openTopSitesOption)

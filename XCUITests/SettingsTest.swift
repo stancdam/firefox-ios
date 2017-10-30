@@ -29,8 +29,8 @@ class SettingsTest: BaseTestCase {
         XCTAssertTrue(helpMenu.isEnabled)
         helpMenu.tap()
 
-        waitForValueContains(app.textFields["url"], value: "support.mozilla.org")
         waitUntilPageLoad()
+        waitForValueContains(app.textFields["url"], value: "support.mozilla.org")
         waitforExistence(app.webViews.staticTexts["Firefox for iOS"])
         XCTAssertTrue(app.webViews.staticTexts["Firefox for iOS"].exists)
         let numTabs = app.buttons["Show Tabs"].value

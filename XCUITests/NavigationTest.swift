@@ -46,6 +46,7 @@ class NavigationTest: BaseTestCase {
 
         // Once an url has been open, the back button is enabled but not the forward button
         navigator.openURL(urlString: website_1["url"]!)
+        waitUntilPageLoad()
         waitForValueContains(app.textFields["url"], value: website_1["value"]!)
         if iPad() {
             XCTAssertTrue(app.buttons["URLBarView.backButton"].isEnabled)
@@ -57,6 +58,7 @@ class NavigationTest: BaseTestCase {
 
         // Once a second url is open, back button is enabled but not the forward one till we go back to url_1
         navigator.openURL(urlString:  website_2["url"]!)
+        waitUntilPageLoad()
         waitForValueContains(app.textFields["url"], value: website_2["value"]!)
         if iPad() {
             XCTAssertTrue(app.buttons["URLBarView.backButton"].isEnabled)
@@ -245,8 +247,8 @@ class NavigationTest: BaseTestCase {
         // From desktop view it is posible to change to mobile view again
         navigator.nowAt(BrowserTab)
         navigator.browserPerformAction(.toggleDesktopOption)
-        waitForValueContains(app.textFields["url"], value: urlAddOns)
         waitUntilPageLoad()
+        waitForValueContains(app.textFields["url"], value: urlAddOns)
 
         // After reloading a website the mobile view should be kept
         if iPad() {

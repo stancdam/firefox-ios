@@ -158,15 +158,28 @@ class TabManagerTests: XCTestCase {
         XCTAssertEqual(stateDelegate.numberOfTabsStored, 0, "Expected state delegate to have been called with 3 tabs, but called with \(stateDelegate.numberOfTabsStored)")
     }
 
-    func testAddTab() {
+    func testAddTabShouldAddOneNormalTab() {
         let profile = TabManagerMockProfile()
         let manager = TabManager(prefs: profile.prefs, imageStore: nil)
         let delegate = MockTabManagerDelegate()
         manager.addDelegate(delegate)
-
+        
         delegate.expect([willAdd, didAdd])
         manager.addTab()
         delegate.verify("Not all delegate methods were called")
+        XCTAssertEqual(manager.normalTabs.count, 1, "There should be one new normal tab")
+    }
+    
+    func testAddTabShouldAddOnePrivateTab() {
+        let profile = TabManagerMockProfile()
+        let manager = TabManager(prefs: profile.prefs, imageStore: nil)
+        let delegate = MockTabManagerDelegate()
+        manager.addDelegate(delegate)
+        
+        delegate.expect([willAdd, didAdd])
+        manager.addTab(isPrivate: true)
+        delegate.verify("Not all delegate methods were called")
+        XCTAssertEqual(manager.privateTabs.count, 1, "There should be one new private tab")
     }
 
     func testDidDeleteLastTab() {

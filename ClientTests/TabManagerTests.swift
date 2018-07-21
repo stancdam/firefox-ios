@@ -361,6 +361,39 @@ class TabManagerTests: XCTestCase {
         // Rule: last one left.
         XCTAssertEqual(manager.selectedTab, tab0)
     }
+    
+    func testRemoveTabSelectedTabShouldChangeIndex() {
+        let profile = TabManagerMockProfile()
+        let manager = TabManager(prefs: profile.prefs, imageStore: nil)
+        
+        let tab1 = manager.addTab()
+        manager.addTab()
+        let tab3 = manager.addTab()
+        
+        manager.selectTab(tab3)
+        let beforeRemoveTabIndex = manager.selectedIndex
+        manager.removeTab(tab1)
+        XCTAssertNotEqual(manager.selectedIndex, beforeRemoveTabIndex)
+        XCTAssertEqual(manager.selectedTab, tab3)
+        XCTAssertEqual(manager.tabs[manager.selectedIndex], tab3)
+    }
+    
+    func testRemoveTabRemovingLastNormalTabShouldNotSwitchToPrivateTab() {
+        let profile = TabManagerMockProfile()
+        let manager = TabManager(prefs: profile.prefs, imageStore: nil)
+
+        let tab0 = manager.addTab()
+        let tab1 = manager.addTab(isPrivate: true)
+
+        manager.selectTab(tab0)
+        // select private tab, so we are in privateMode
+        manager.selectTab(tab1, previous: tab0)
+        // if we are able to remove normal tab this means we are no longer in private mode
+        manager.removeTab(tab0)
+        // manager should creat new tab and select it
+        XCTAssertNotEqual(manager.selectedTab, tab1)
+        XCTAssertNotEqual(manager.selectedIndex, manager.tabs.index(of: tab1))
+    }
 
     func testDeleteLastTab() {
         let profile = TabManagerMockProfile()

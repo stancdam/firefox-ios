@@ -181,6 +181,24 @@ class TabManagerTests: XCTestCase {
         delegate.verify("Not all delegate methods were called")
         XCTAssertEqual(manager.privateTabs.count, 1, "There should be one new private tab")
     }
+    
+    func testAddTabAndSelect() {
+        let profile = TabManagerMockProfile()
+        let manager = TabManager(prefs: profile.prefs, imageStore: nil)  
+        
+        manager.addTabAndSelect()
+        XCTAssertEqual(manager.selectedIndex, 0, "There should be selected first tab")
+    }
+    
+    func testMoveTabFromLastToFirstPosition() {
+        let profile = TabManagerMockProfile()
+        let manager = TabManager(prefs: profile.prefs, imageStore: nil)
+        // add two tabs, last one will be selected
+        manager.addTab()
+        manager.addTabAndSelect()
+        manager.moveTab(isPrivate: false, fromIndex: 1, toIndex: 0)
+        XCTAssertEqual(manager.selectedIndex, 0, "There should be selected second tab")
+    }
 
     func testDidDeleteLastTab() {
         let profile = TabManagerMockProfile()

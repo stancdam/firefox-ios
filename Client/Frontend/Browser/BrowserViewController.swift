@@ -1002,6 +1002,18 @@ class BrowserViewController: UIViewController {
         }
     }
 
+    func openSearchNewTab(isPrivate: Bool = false, _ text: String) {
+        popToBVC()
+        let engine = profile.searchEngines.defaultEngine
+        if let searchURL = engine.searchURLForQuery(text) {
+            openURLInNewTab(searchURL, isPrivate: isPrivate, isPrivileged: true)
+        } else {
+            // We still don't have a valid URL, so something is broken. Give up.
+            print("Error handling URL entry: \"\(text)\".")
+            assertionFailure("Couldn't generate search URL: \(text)")
+        }
+    }
+
     fileprivate func popToBVC() {
         guard let currentViewController = navigationController?.topViewController else {
                 return
@@ -1151,6 +1163,10 @@ class BrowserViewController: UIViewController {
             // To Screenshot a tab that is hidden we must add the webView,
             // then wait enough time for the webview to render.
             view.insertSubview(webView, at: 0)
+            // This is kind of a hacky fix for Bug 1476637 to prevent webpages from focusing the
+            // touch-screen keyboard from the background even though they shouldn't be able to.
+            webView.resignFirstResponder()
+
             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
                 self.screenshotHelper.takeScreenshot(tab)
                 if webView.superview == self.view {
@@ -1551,7 +1567,7 @@ extension BrowserViewController: TabToolbarDelegate, PhotonActionSheetProtocol {
         }), accessibilityIdentifier: "toolbarTabButtonLongPress.newPrivateTab")
         controller.addAction(UIAlertAction(title: Strings.CloseTabTitle, style: .destructive, handler: { _ in
             if let tab = self.tabManager.selectedTab {
-                self.tabManager.removeTab(tab)
+                self.tabManager.removeTabAndUpdateSelectedIndex(tab)
             }
         }), accessibilityIdentifier: "toolbarTabButtonLongPress.closeTab")
         controller.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Label for Cancel button"), style: .cancel, handler: nil), accessibilityIdentifier: "toolbarTabButtonLongPress.cancel")
@@ -1692,8 +1708,7 @@ extension BrowserViewController: TabDelegate {
     }
 
     func tab(_ tab: Tab, didSelectSearchWithFirefoxForSelection selection: String) {
-        openBlankNewTab(focusLocationField: false, isPrivate: tab.isPrivate)
-        submitSearchText(selection)
+        openSearchNewTab(isPrivate: tab.isPrivate, selection)
     }
 }
 
@@ -1981,7 +1996,7 @@ extension BrowserViewController: WKUIDelegate {
 
     func webViewDidClose(_ webView: WKWebView) {
         if let tab = tabManager[webView] {
-            self.tabManager.removeTab(tab)
+            self.tabManager.removeTabAndUpdateSelectedIndex(tab)
         }
     }
 }

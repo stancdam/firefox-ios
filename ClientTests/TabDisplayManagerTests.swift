@@ -24,7 +24,7 @@ class TabDisplayManagerTests: XCTestCase {
 
     // Without session data, a Tab can't become a SavedTab and get archived
     func addTab(isPrivate: Bool = false) -> Tab {
-        let tab = Tab(configuration: configuration, isPrivate: isPrivate)
+        let tab = Tab(isPrivate: isPrivate)
         tabManager.configureTab(tab, request: nil, flushToDisk: false, zombie: false)
         return tab
     }

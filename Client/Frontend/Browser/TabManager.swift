@@ -63,29 +63,6 @@ class TabManager: NSObject {
 
     fileprivate let navDelegate: TabManagerNavDelegate
 
-    // A WKWebViewConfiguration used for normal tabs
-    lazy fileprivate var configuration: WKWebViewConfiguration = {
-        let configuration = WKWebViewConfiguration()
-        configuration.processPool = WKProcessPool()
-        configuration.preferences.javaScriptCanOpenWindowsAutomatically = !(profile.prefs.boolForKey("blockPopups") ?? true)
-        // We do this to go against the configuration of the <meta name="viewport">
-        // tag to behave the same way as Safari :-(
-        configuration.ignoresViewportScaleLimits = true
-        return configuration
-    }()
-
-    // A WKWebViewConfiguration used for private mode tabs
-    lazy fileprivate var privateConfiguration: WKWebViewConfiguration = {
-        let configuration = WKWebViewConfiguration()
-        configuration.processPool = WKProcessPool()
-        configuration.preferences.javaScriptCanOpenWindowsAutomatically = !(profile.prefs.boolForKey("blockPopups") ?? true)
-        // We do this to go against the configuration of the <meta name="viewport">
-        // tag to behave the same way as Safari :-(
-        configuration.ignoresViewportScaleLimits = true
-        configuration.websiteDataStore = WKWebsiteDataStore.nonPersistent()
-        return configuration
-    }()
-
     var selectedIndex: Int { return _selectedIndex }
 
     // Enables undo of recently closed tabs
@@ -232,8 +209,9 @@ class TabManager: NSObject {
         }
     }
 
-    func addPopupForParentTab(_ parentTab: Tab, configuration: WKWebViewConfiguration) -> Tab {
-        let popup = Tab(configuration: configuration, isPrivate: parentTab.isPrivate)
+    func addPopupForParentTab(_ parentTab: Tab) -> Tab {
+        let blockPopups = profile.prefs.boolForKey("blockPopups") ?? true
+        let popup = Tab(isPrivate: parentTab.isPrivate, blockPopups: blockPopups)
         configureTab(popup, request: nil, afterTab: parentTab, flushToDisk: true, zombie: false, isPopup: true)
 
         // Wait momentarily before selecting the new tab, otherwise the parent tab
@@ -246,8 +224,8 @@ class TabManager: NSObject {
         return popup
     }
 
-    @discardableResult func addTab(_ request: URLRequest! = nil, configuration: WKWebViewConfiguration! = nil, afterTab: Tab? = nil, isPrivate: Bool = false) -> Tab {
-        return self.addTab(request, configuration: configuration, afterTab: afterTab, flushToDisk: true, zombie: false, isPrivate: isPrivate)
+    @discardableResult func addTab(_ request: URLRequest! = nil, afterTab: Tab? = nil, isPrivate: Bool = false) -> Tab {
+        return self.addTab(request, afterTab: afterTab, flushToDisk: true, zombie: false, isPrivate: isPrivate)
     }
 
     func addTabsForURLs(_ urls: [URL], zombie: Bool) {
@@ -271,13 +249,11 @@ class TabManager: NSObject {
         storeChanges()
     }
 
-    func addTab(_ request: URLRequest? = nil, configuration: WKWebViewConfiguration? = nil, afterTab: Tab? = nil, flushToDisk: Bool, zombie: Bool, isPrivate: Bool = false) -> Tab {
+    func addTab(_ request: URLRequest? = nil, afterTab: Tab? = nil, flushToDisk: Bool, zombie: Bool, isPrivate: Bool = false) -> Tab {
         assert(Thread.isMainThread)
 
-        // Take the given configuration. Or if it was nil, take our default configuration for the current browsing mode.
-        let configuration: WKWebViewConfiguration = configuration ?? (isPrivate ? privateConfiguration : self.configuration)
-
-        let tab = Tab(configuration: configuration, isPrivate: isPrivate)
+        let blockPopups = profile.prefs.boolForKey("blockPopups") ?? true
+        let tab = Tab(isPrivate: isPrivate, blockPopups: blockPopups)
         configureTab(tab, request: request, afterTab: afterTab, flushToDisk: flushToDisk, zombie: zombie)
         return tab
     }
@@ -532,19 +508,10 @@ class TabManager: NSObject {
     @objc func prefsDidChange() {
         DispatchQueue.main.async {
             let allowPopups = !(self.profile.prefs.boolForKey("blockPopups") ?? true)
-            // Each tab may have its own configuration, so we should tell each of them in turn.
             for tab in self.tabs {
                 tab.webView?.configuration.preferences.javaScriptCanOpenWindowsAutomatically = allowPopups
             }
-            // The default tab configurations also need to change.
-            self.configuration.preferences.javaScriptCanOpenWindowsAutomatically = allowPopups
-            self.privateConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = allowPopups
         }
-    }
-
-    func resetProcessPool() {
-        assert(Thread.isMainThread)
-        configuration.processPool = WKProcessPool()
     }
 }
 

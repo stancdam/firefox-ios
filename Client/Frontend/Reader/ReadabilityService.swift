@@ -38,8 +38,7 @@ class ReadabilityOperation: Operation {
         // and WebKit are not safe from other threads.
 
         DispatchQueue.main.async(execute: { () -> Void in
-            let configuration = WKWebViewConfiguration()
-            self.tab = Tab(configuration: configuration)
+            self.tab = Tab()
             self.tab.createWebview()
             self.tab.navigationDelegate = self
 

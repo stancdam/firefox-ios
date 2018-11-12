@@ -11,7 +11,7 @@ import XCTest
 class TabEventHandlerTests: XCTestCase {
 
     func testEventDelivery() {
-        let tab = Tab(configuration: WKWebViewConfiguration())
+        let tab = Tab()
         let handler = DummyHandler()
 
         XCTAssertNil(handler.isFocused)
@@ -24,7 +24,7 @@ class TabEventHandlerTests: XCTestCase {
     }
 
     func testUnregistration() {
-        let tab = Tab(configuration: WKWebViewConfiguration())
+        let tab = Tab()
         let handler = DummyHandler()
 
         XCTAssertNil(handler.isFocused)
@@ -39,7 +39,7 @@ class TabEventHandlerTests: XCTestCase {
     }
 
     func testOnlyRegisteredForEvents() {
-        let tab = Tab(configuration: WKWebViewConfiguration())
+        let tab = Tab()
         let handler = DummyHandler()
         handler.doUnregister()
 

@@ -498,7 +498,7 @@ class TabManagerTests: XCTestCase {
     func testUndoCloseTabsRemovesAutomaticallyCreatedNonPrivateTab() {
 
         let tab = manager.addTab()
-        let tabToSave = Tab(configuration: WKWebViewConfiguration())
+        let tabToSave = Tab()
         tabToSave.sessionData = SessionData(currentPage: 0, urls: [URL(string: "url")!], lastUsedTime: Date.now())
         if let savedTab = SavedTab(tab: tabToSave, isSelected: false) {
             manager.recentlyClosedForUndo = [savedTab]

@@ -155,8 +155,8 @@ class Tab: NSObject {
     /// tab instance, queue it for later until we become foregrounded.
     fileprivate var alertQueue = [JSAlertInfo]()
 
-    init(configuration: WKWebViewConfiguration, isPrivate: Bool = false) {
-        self.configuration = configuration
+    init(isPrivate: Bool = false, blockPopups: Bool = true) {
+        self.configuration = TabHelper.createConfiguration(tab: isPrivate, blockPopups: blockPopups)
         super.init()
         self.isPrivate = isPrivate
 
@@ -632,6 +632,21 @@ private class TabWebView: WKWebView, MenuHelperInterface {
         becomeFirstResponder()
 
         return super.hitTest(point, with: event)
+    }
+}
+
+class TabHelper {
+    static func createConfiguration(tab isPrivate: Bool, blockPopups: Bool = true) -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        configuration.processPool = WKProcessPool()
+        configuration.preferences.javaScriptCanOpenWindowsAutomatically = !blockPopups
+        // We do this to go against the configuration of the <meta name="viewport">
+        // tag to behave the same way as Safari :-(
+        configuration.ignoresViewportScaleLimits = true
+        if isPrivate {
+            configuration.websiteDataStore = WKWebsiteDataStore.nonPersistent()
+        }
+        return configuration
     }
 }
 

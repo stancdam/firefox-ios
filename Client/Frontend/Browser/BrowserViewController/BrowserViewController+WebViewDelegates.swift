@@ -27,7 +27,7 @@ extension BrowserViewController: WKUIDelegate {
         // If the page uses `window.open()` or `[target="_blank"]`, open the page in a new tab.
         // IMPORTANT!!: WebKit will perform the `URLRequest` automatically!! Attempting to do
         // the request here manually leads to incorrect results!!
-        let newTab = tabManager.addPopupForParentTab(parentTab, configuration: configuration)
+        let newTab = tabManager.addPopupForParentTab(parentTab)
 
         return newTab.webView
     }
